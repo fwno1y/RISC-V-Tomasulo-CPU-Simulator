@@ -13,7 +13,7 @@ struct Instruction {
     uint32_t raw_bits = 0;
     InstructionType type = InstructionType::HALT;
     uint32_t rd = 0, rs1 = 0, rs2 = 0;
-    uint32_t imm = 0;
+    int32_t imm = 0;
 
     Instruction() = default;
 };
