@@ -17,7 +17,7 @@ class RS {
     RSEntry next_entries[32];
 
     void update();
-    bool is_full();
-    int allocate();
+    bool is_full() const;
+    int allocate() const;
 };
 #endif //RISC_V_CPU_RS_H
