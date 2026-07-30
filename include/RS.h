@@ -13,6 +13,7 @@ struct RSEntry {
 };
 
 class RS {
+public:
     RSEntry entries[32];
     RSEntry next_entries[32];
 

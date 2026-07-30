@@ -10,6 +10,7 @@ struct CDBEntry {
 };
 
 class CDB {
+public:
     CDBEntry entries;
     CDBEntry next_entries;
 

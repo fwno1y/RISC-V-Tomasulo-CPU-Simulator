@@ -15,6 +15,7 @@ struct ROBEntry {
 };
 
 class ROB {
+public:
     ROBEntry entries[32];
     int head = 0;
     int tail = 0;
