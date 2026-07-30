@@ -4,7 +4,7 @@
 
 struct RegState {
     uint32_t val[32] = {0};
-    uint32_t rob[32]{};
+    int rob[32]{};
 
     RegState() {
         for (int i = 0; i < 32; ++i) {
