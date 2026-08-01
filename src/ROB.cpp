@@ -33,3 +33,6 @@ int ROB::push(Instruction instruction, uint32_t dest) {
     return idx;
 }
 
+void ROB::clear() {
+
+}

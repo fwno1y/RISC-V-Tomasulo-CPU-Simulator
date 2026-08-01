@@ -10,12 +10,18 @@ struct CDBEntry {
 };
 
 class CDB {
-public:
     CDBEntry entries;
     CDBEntry next_entries;
 
+public:
     CDB() = default;
     void update();
     void clear();
+    void broadcast(int rob_id, uint32_t value, uint32_t target_pc);
+    bool is_active() const;
+    int get_rob() const;
+    uint32_t get_value() const;
+    uint32_t get_target_pc() const;
+    bool is_next_free() const;
 };
 #endif //RISC_V_CPU_CDB_H

@@ -24,11 +24,17 @@ class LSQ {
     int next_tail = 0;
     int next_cnt = 0;
 
+public:
     LSQ() = default;
     void update();
+    void clear();
     bool is_full() const;
     bool is_empty() const;
     int push(InstructionType op, bool is_store, uint32_t vj, uint32_t vk, int qj, int qk, int32_t imm, int rob);
-    void clear();
+    void listen_cdb(int rob_id, uint32_t value);
+    int find_load(int& rob_out) const;
+    bool find_store(int rob_id, uint32_t& addr, uint32_t& data, int& size) const;
+    void pop_head();
+    const LSQEntry& get_entry(int idx) const;
 };
 #endif //RISC_V_CPU_LSQ_H

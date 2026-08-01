@@ -31,6 +31,10 @@ uint32_t ALU::execute(InstructionType op, uint32_t op1, uint32_t op2, uint32_t p
         case InstructionType::SLTIU:
         case InstructionType::SLTU:
             return op1 < op2 ? 1 : 0;
+        case InstructionType::JAL:
+            return pc + 4;
+        case InstructionType::JALR:
+            return pc + 4;
         case InstructionType::LUI:
             return imm;
         case InstructionType::AUIPC:

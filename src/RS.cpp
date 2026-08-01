@@ -24,3 +24,6 @@ int RS::allocate() const {
     return 0;
 }
 
+void RS::clear() {
+
+}

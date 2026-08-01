@@ -20,6 +20,14 @@ class Register {
 public:
     void update();
     void clear();
+
+    //读寄存器
+    uint32_t read_value(int reg_id) const;
+    int read_rob(int reg_id) const;
+    //写寄存器
+    void set_value(int reg_id, uint32_t value);
+    void set_rob(int reg_id, int rob_id);
+
 };
 
 #endif //RISC_V_CPU_REG_H

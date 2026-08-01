@@ -1,3 +1,10 @@
-//
-// Created by 36433 on 2026/7/28.
-//
+#include "../include/Predictor.h"
+
+bool Predictor::predict(uint32_t pc) const {
+
+}
+
+void Predictor::update(uint32_t pc, bool jump) {
+
+}
+

@@ -15,7 +15,6 @@ struct ROBEntry {
 };
 
 class ROB {
-public:
     ROBEntry entries[32];
     int head = 0;
     int tail = 0;
@@ -25,12 +24,19 @@ public:
     int next_tail = 0;
     int next_cnt = 0;
 
+public:
     ROB() = default;
     void update();
+    void clear();
     bool is_full() const;
     bool is_empty() const;
+    int get_count() const;
     int push(Instruction instruction, uint32_t dest);
-    void clear();
+    const ROBEntry& get_head() const;
+    void commit_head();
+    void listen_cdb(int rob_id, uint32_t value, uint32_t target_pc);
+    const ROBEntry& get_entry(int rob_id) const;
+    void flush(int rob_id);
 };
 
 #endif //RISC_V_CPU_ROB_H

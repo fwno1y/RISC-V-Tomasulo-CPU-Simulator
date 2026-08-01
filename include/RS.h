@@ -19,8 +19,13 @@ public:
 
     RS() = default;
     void update();
+    void clear();
     bool is_full() const;
     int allocate() const;
-    void clear();
+    void issue(int rs_id, InstructionType op, uint32_t vj, uint32_t vk, int qj, int qk, int dest, uint32_t pc, int32_t imm);
+    void listen_cdb(int rob_id, uint32_t value);
+    int find_ready() const;
+    void release(int rs_id);
+    const RSEntry& get_entry(int rs_id) const;
 };
 #endif //RISC_V_CPU_RS_H
