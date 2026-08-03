@@ -46,3 +46,28 @@ int LSQ::push(InstructionType op, bool is_store, uint32_t vj, uint32_t vk, int q
     return idx;
 }
 
+void LSQ::listen_cdb(int rob_id, uint32_t value) {
+
+}
+
+int LSQ::find_load(int &rob_out) const {
+
+}
+
+bool LSQ::find_store(int rob_id, uint32_t &addr, uint32_t &data, int &size) const {
+
+}
+
+void LSQ::pop_head() {
+
+}
+
+const LSQEntry &LSQ::get_entry(int idx) const {
+
+}
+
+
+
+
+
+
