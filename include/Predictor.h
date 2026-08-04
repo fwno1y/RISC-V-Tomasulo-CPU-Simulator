@@ -19,6 +19,7 @@ public:
 
 class BimodelPredictor : Predictor {
 public:
+    int bht[1024] = {};
     BimodelPredictor();
     bool predict(uint32_t pc) const override;
     void update(uint32_t pc, bool jump) override;

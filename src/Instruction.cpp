@@ -93,6 +93,7 @@ Instruction decode(uint32_t pc, uint32_t raw_bits) {
                 }
                 instruction.imm = instruction.rs2;
             }
+            break;
         }
         case 0b0000011 : {
             instruction.imm = imm_i;
@@ -124,6 +125,7 @@ Instruction decode(uint32_t pc, uint32_t raw_bits) {
             else if (funct3 == 2) {
                 instruction.type = InstructionType::SW;
             }
+            break;
         }
         case 0b1100011 : {
             instruction.imm = imm_b;
@@ -150,10 +152,12 @@ Instruction decode(uint32_t pc, uint32_t raw_bits) {
         case 0b1101111 : {
             instruction.type = InstructionType::JAL;
             instruction.imm = imm_j;
+            break;
         }
         case 0b1100111 : {
             instruction.type = InstructionType::JALR;
             instruction.imm = imm_i;
+            break;
         }
         case 0b0010111 : {
             instruction.type = InstructionType::AUIPC;
