@@ -17,14 +17,14 @@ Instruction decode(uint32_t pc, uint32_t raw_bits) {
     instruction.rs2 = raw_bits >> 20 & 0x1f;
     uint32_t funct3 = raw_bits >> 12 & 0x7;
     uint32_t funct7 = raw_bits >> 25 & 0x7f;
-    uint32_t imm_i = raw_bits >> 20;
-    uint32_t imm_s = (raw_bits >> 25 << 5) | (raw_bits >> 7 & 0x1f);
-    uint32_t imm_b = (raw_bits >> 31 & 1 << 12) | (raw_bits >> 7 & 1 << 11) | (raw_bits >> 25 & 0x3f << 5) | (raw_bits >> 8 & 0xf << 1);
+    int32_t imm_i = static_cast<int32_t>(raw_bits) >> 20;
+    int32_t imm_s = (static_cast<int32_t>(raw_bits) >> 25 << 5) | (raw_bits >> 7 & 0x1f);
+    uint32_t imm_b = ((raw_bits >> 31 & 1) << 12) | ((raw_bits >> 7 & 1) << 11) | ((raw_bits >> 25 & 0x3f) << 5) | ((raw_bits >> 8 & 0xf) << 1);
     if (imm_b & 0x1000) {
         imm_b |= 0xffffe000;
     }
     uint32_t imm_u = raw_bits & 0xfffff000;
-    uint32_t imm_j = (raw_bits >> 31 & 1 << 20) | (raw_bits >> 12 & 0xff << 12) | (raw_bits >> 20 & 1 << 11) | (raw_bits >> 21 & 0x3ff << 1);
+    uint32_t imm_j = ((raw_bits >> 31 & 1) << 20) | ((raw_bits >> 12 & 0xff) << 12) | ((raw_bits >> 20 & 1) << 11) | ((raw_bits >> 21 & 0x3ff) << 1);
     if (imm_j & 0x100000) {
         imm_j |= 0xffe00000;
     }
