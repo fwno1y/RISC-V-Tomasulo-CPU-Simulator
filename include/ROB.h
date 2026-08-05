@@ -15,6 +15,7 @@ struct ROBEntry {
 };
 
 class ROB {
+public:
     ROBEntry entries[32];
     int head = 0;
     int tail = 0;
@@ -24,7 +25,6 @@ class ROB {
     int next_tail = 0;
     int next_cnt = 0;
 
-public:
     ROB() = default;
     void update();
     void clear();

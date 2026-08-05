@@ -23,10 +23,10 @@ public:
 
     //读寄存器
     uint32_t read_value(int reg_id) const;
-    int read_rob(int reg_id) const;
+    int read_rob(uint32_t reg_id) const;
     //写寄存器
-    void set_value(int reg_id, uint32_t value);
-    void set_rob(int reg_id, int rob_id);
+    void set_value(uint32_t reg_id, uint32_t value);
+    void set_rob(uint32_t reg_id, int rob_id);
 
 };
 

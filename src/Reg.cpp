@@ -24,21 +24,21 @@ uint32_t Register::read_value(int reg_id) const {
     return cur.val[reg_id];
 }
 
-int Register::read_rob(int reg_id) const {
+int Register::read_rob(uint32_t reg_id) const {
     if (reg_id == 0) {
         return -1;
     }
     return cur.rob[reg_id];
 }
 
-void Register::set_value(int reg_id, uint32_t value) {
+void Register::set_value(uint32_t reg_id, uint32_t value) {
     if (reg_id == 0) {
         return;
     }
     next.val[reg_id] = value;
 }
 
-void Register::set_rob(int reg_id, int rob_id) {
+void Register::set_rob(uint32_t reg_id, int rob_id) {
     if (reg_id == 0) {
         return;
     }
