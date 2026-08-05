@@ -10,9 +10,7 @@ void Register::update() {
 
 void Register::clear() {
     for (int i = 0; i < 32; ++i) {
-        cur.val[i] = 0;
         cur.rob[i] = -1;
-        next.val[i] = 0;
         next.rob[i] = -1;
     }
 }
