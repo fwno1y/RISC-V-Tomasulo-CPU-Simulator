@@ -20,7 +20,7 @@ class Register {
 public:
     void update();
     void clear();
-
+    void clear_rob();
     //读寄存器
     uint32_t read_value(int reg_id) const;
     int read_rob(uint32_t reg_id) const;

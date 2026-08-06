@@ -35,6 +35,7 @@ public:
     int find_load(int& rob_out) const;
     bool find_store(int rob_id, uint32_t& addr, uint32_t& data, int& size) const;
     void pop_head();
+    void pop_entry(int idx);
     const LSQEntry& get_entry(int idx) const;
 };
 #endif //RISC_V_CPU_LSQ_H

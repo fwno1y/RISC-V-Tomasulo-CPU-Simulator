@@ -11,20 +11,20 @@ void StaticPredictor::update(uint32_t pc, bool jump) {}
 BimodelPredictor::BimodelPredictor() = default;
 
 bool BimodelPredictor::predict(uint32_t pc) const {
-    int idx = (pc >> 2) & 0xfff;
+    int idx = (pc >> 2) & 0x3ff;
     return bht[idx] >= 2;
 }
 
 void BimodelPredictor::update(uint32_t pc, bool jump) {
-    int idx = (pc >> 2) & 0xfff;
+    int idx = (pc >> 2) & 0x3ff;
     if (jump) {
         if (bht[idx] < 3) {
             bht[idx]++;
         }
-        else {
-            if (bht[idx] > 0) {
-                bht[idx]--;
-            }
+    }
+    else {
+        if (bht[idx] > 0) {
+            bht[idx]--;
         }
     }
 }

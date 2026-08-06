@@ -10,10 +10,20 @@ void Register::update() {
 
 void Register::clear() {
     for (int i = 0; i < 32; ++i) {
+        cur.val[i] = 0;
+        cur.rob[i] = -1;
+        next.val[i] = 0;
+        next.rob[i] = -1;
+    }
+}
+
+void Register::clear_rob() {
+    for (int i = 0; i < 32; ++i) {
         cur.rob[i] = -1;
         next.rob[i] = -1;
     }
 }
+
 
 uint32_t Register::read_value(int reg_id) const {
     if (reg_id == 0) {

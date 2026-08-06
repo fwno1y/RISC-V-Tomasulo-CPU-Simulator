@@ -74,7 +74,7 @@ int LSQ::find_load(int &rob_out) const {
             bool flag = false;
             for (int j = 0; j < i; ++j) {
                 int pre_idx = (head + j) % 16;
-                if (entries[pre_idx].is_store) {
+                if (entries[pre_idx].busy && entries[pre_idx].is_store) {
                     if (!entries[pre_idx].ready || entries[pre_idx].addr == entries[idx].addr) {
                         flag = true;
                         break;
@@ -113,9 +113,16 @@ bool LSQ::find_store(int rob_id, uint32_t &addr, uint32_t &data, int &size) cons
 }
 
 void LSQ::pop_head() {
-    next_entries[next_head] = LSQEntry();
-    next_head = (next_head + 1) % 16;
-    next_cnt--;
+    pop_entry(head);
+}
+
+
+void LSQ::pop_entry(int idx) {
+    next_entries[idx] = LSQEntry();
+    while (next_cnt > 0 && !next_entries[next_head].busy) {
+        next_head = (next_head + 1) % 16;
+        next_cnt--;
+    }
 }
 
 const LSQEntry &LSQ::get_entry(int idx) const {
