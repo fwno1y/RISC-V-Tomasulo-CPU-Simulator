@@ -34,7 +34,7 @@ void Memory::load_byte(uint32_t addr, uint8_t byte) {
 }
 
 bool Memory::issue_read(uint32_t addr, int size, int rob, int late) {
-    if (next.active) {
+    if (cur.active || next.active) {
         return false;
     }
     next.active = true;
@@ -47,7 +47,7 @@ bool Memory::issue_read(uint32_t addr, int size, int rob, int late) {
 }
 
 bool Memory::issue_write(uint32_t addr, uint32_t data, int size, int late) {
-    if (next.active) {
+    if (cur.active || next.active) {
         return false;
     }
     next.active = true;
@@ -59,7 +59,7 @@ bool Memory::issue_write(uint32_t addr, uint32_t data, int size, int late) {
     return true;
 }
 
-bool Memory::check_read_done(int &out_rob, uint32_t &out_data) {
+bool Memory::check_read_done(int &out_rob, uint32_t &out_data) const {
     if (!cur.active || cur.is_write || cur.cycles_left > 0) {
         return false;
     }
@@ -68,8 +68,11 @@ bool Memory::check_read_done(int &out_rob, uint32_t &out_data) {
     for (int i = 0; i < cur.size; ++i) {
         out_data |= static_cast<uint32_t> (mem[cur.addr + i]) << (i * 8);
     }
-    next.active = false;
     return true;
+}
+
+void Memory::finish_read() {
+    next.active = false;
 }
 
 bool Memory::check_write_done() {

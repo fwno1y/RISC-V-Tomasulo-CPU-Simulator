@@ -19,19 +19,22 @@ int main() {
     CDB cdb;
     BimodelPredictor predictor;
     std::string line;
-    uint32_t cur_addr;
+    uint32_t cur_addr = 0;
+    bool in_segment = false;
     while (std::getline(std::cin, line)) {
         if (line.empty()) {
+            in_segment = false;
             continue;
         }
         if (line[0] == '@') {
             cur_addr = std::stoul(line.substr(1), nullptr, 16);
+            in_segment = true;
         }
-        else {
+        else if (in_segment) {
             std::istringstream iss(line);
             std::string str;
             while (iss >> str) {
-                uint8_t byte = std::stoul(str, nullptr, 16);
+                uint8_t byte = static_cast<uint8_t>(std::stoul(str, nullptr, 16));
                 mem.load_byte(cur_addr++, byte);
             }
         }
@@ -40,8 +43,23 @@ int main() {
     uint32_t next_pc = 0;
     int cycle_cnt = 0;
     bool jalr = false;
+    bool halted = false;
     while (true) {
         cycle_cnt++;
+        if (halted && rob.is_empty() && !mem.is_busy()) {
+            uint32_t res = reg.read_value(10) & 0xff;
+            std::cout << std::dec << res << std::endl;
+            break;
+        }
+        bool mispredicted = false;
+        for (int i = 0; i < 16; ++i) {
+            const LSQEntry& entry = lsq.get_entry(i);
+            if (entry.busy && entry.is_store) {
+                if (entry.ready && entry.qk == -1) {
+                    rob.next_entries[entry.rob].ready = true;
+                }
+            }
+        }
         if (!rob.is_empty()) {
             const ROBEntry& head = rob.get_head();
             if (head.ready) {
@@ -55,16 +73,19 @@ int main() {
                 bool is_branch = (inst.type == InstructionType::BEQ || inst.type == InstructionType::BGE || inst.type == InstructionType::BGEU || inst.type == InstructionType::BLT || inst.type == InstructionType::BLTU || inst.type == InstructionType::BNE);
                 if (is_branch) {
                     bool actual_taken = (head.target_pc != inst.pc + 4);
-                    bool predict_taken = (head.value != 0);
+                    bool predict_taken = head.jump;
                     predictor.update(inst.pc, actual_taken);
                     //预测失败
                     if (actual_taken != predict_taken) {
+                        uint32_t redirect_pc = head.target_pc;
                         rob.clear();
                         rs.clear();
                         lsq.clear();
-                        next_pc = head.target_pc;
+                        cdb.clear();
+                        next_pc = redirect_pc;
                         jalr = false;
-                        reg.clear();
+                        reg.clear_rob();
+                        mispredicted = true;
                     }
                 }
                 else if (inst.type == InstructionType::JALR) {
@@ -76,17 +97,21 @@ int main() {
                     std::cout << std::dec << res << std::endl;
                     break;
                 }
-                bool is_store = (inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
-                if (is_store) {
-                    uint32_t st_addr, st_data;
-                    int st_size;
-                    if (lsq.find_store(rob.head, st_addr, st_data, st_size)) {
-                        mem.issue_write(st_addr, st_data, st_size);
-                        lsq.pop_head();
+                if (!mispredicted) {
+                    bool is_store = (inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
+                    if (is_store) {
+                        uint32_t st_addr, st_data;
+                        int st_size;
+                        if (lsq.find_store(rob.head, st_addr, st_data, st_size)) {
+                            if (mem.issue_write(st_addr, st_data, st_size)) {
+                                lsq.pop_head();
+                                rob.commit_head();
+                            }
+                        }
                     }
-                }
-                if (!is_store) {
-                    rob.commit_head();
+                    if (!is_store) {
+                        rob.commit_head();
+                    }
                 }
             }
         }
@@ -124,8 +149,9 @@ int main() {
 
         int mem_rob = -1;
         uint32_t mem_val = 0;
-        if (mem.check_read_done(mem_rob, mem_val)) {
+        if (cdb.is_next_free() && mem.check_read_done(mem_rob, mem_val)) {
             cdb.broadcast(mem_rob, mem_val, 0);
+            mem.finish_read();
         }
         mem.check_write_done();
 
@@ -141,72 +167,84 @@ int main() {
                 else if (entry.op == InstructionType::LH || entry.op == InstructionType::LHU) {
                     size = 2;
                 }
-                mem.issue_read(entry.addr, size, load_rob);
-                lsq.pop_head();
+                if (mem.issue_read(entry.addr, size, load_rob)) {
+                    lsq.pop_entry(ready_load_idx);
+                }
             }
         }
 
-        if (!rob.is_full() && !rs.is_full() && !lsq.is_full() && !jalr) {
+        if (!rob.is_full() && !rs.is_full() && !lsq.is_full() && !jalr && !halted && !mispredicted) {
             uint32_t raw_inst = mem.read_instruction(pc);
             Instruction inst = decode(pc, raw_inst);
-            uint32_t vj = 0, vk = 0;
-            int qj = -1, qk = -1;
-            if (inst.rs1 != 0) {
-                int r_dep = reg.read_rob(inst.rs1);
-                if (r_dep == -1) {
-                    vj = reg.read_value(inst.rs1);
-                }
-                else if (rob.entries[r_dep].ready) {
-                    vj = rob.entries[r_dep].value;
-                }
-                else {
-                    qj = r_dep;
-                }
-            }
-            if (inst.rs2 != 0) {
-                int r_dep = reg.read_rob(inst.rs2);
-                if (r_dep == -1) {
-                    vk = reg.read_value(inst.rs2);
-                }
-                else if (rob.entries[r_dep].ready) {
-                    vk = rob.entries[r_dep].value;
-                }
-                else {
-                    qk = r_dep;
-                }
-            }
-            int allocate_rob = rob.push(inst, inst.rd);
-            if (inst.rd != 0) {
-                reg.set_rob(inst.rd, allocate_rob);
-            }
-            bool is_mem = (inst.type == InstructionType::LB || inst.type == InstructionType::LBU || inst.type == InstructionType::LH || inst.type == InstructionType::LHU || inst.type == InstructionType::LW || inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
-            if (is_mem) {
-                bool is_st = (inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
-                lsq.push(inst.type, is_st, vj, vk, qj, qk, inst.imm, allocate_rob);
-            }
-            else if (inst.type != InstructionType::HALT) {
-                int rs_idx = rs.allocate();
-                if (inst.type == InstructionType::ADDI || inst.type == InstructionType::ANDI ||inst.type == InstructionType::ORI || inst.type == InstructionType::XORI || inst.type == InstructionType::SLLI || inst.type == InstructionType::SRLI ||inst.type == InstructionType::SRAI || inst.type == InstructionType::SLTI ||inst.type == InstructionType::SLTIU) {
-                    vk = inst.imm;
-                    qk = -1;
-                }
-                rs.issue(rs_idx, inst.type, vj, vk, qj, qk, allocate_rob, pc, inst.imm);
-            }
-
-            bool is_branch = (inst.type == InstructionType::BEQ || inst.type == InstructionType::BNE ||inst.type == InstructionType::BLT || inst.type == InstructionType::BLTU ||inst.type == InstructionType::BGE || inst.type == InstructionType::BGEU);
-            if (is_branch) {
-                bool taken = predictor.predict(pc);
-                next_pc = taken ? (pc + inst.imm) : (pc + 4);
-                rob.next_entries[allocate_rob].value = taken ? 1 : 0;
-            }
-            else if (inst.type == InstructionType::JAL) {
-                next_pc = pc + inst.imm;
-            }
-            else if (inst.type == InstructionType::JALR) {
-                jalr = true;
+            if (inst.type == InstructionType::HALT) {
+                halted = true;
             }
             else {
-                next_pc = pc + 4;
+                uint32_t vj = 0, vk = 0;
+                int qj = -1, qk = -1;
+                if (inst.rs1 != 0) {
+                    int r_dep = reg.read_rob(inst.rs1);
+                    if (r_dep == -1) {
+                        vj = reg.read_value(inst.rs1);
+                    }
+                    else if (rob.entries[r_dep].ready) {
+                        vj = rob.entries[r_dep].value;
+                    }
+                    else if (cdb.is_active() && cdb.get_rob() == r_dep) {
+                        vj = cdb.get_value();
+                    }
+                    else {
+                        qj = r_dep;
+                    }
+                }
+                if (inst.rs2 != 0) {
+                    int r_dep = reg.read_rob(inst.rs2);
+                    if (r_dep == -1) {
+                        vk = reg.read_value(inst.rs2);
+                    }
+                    else if (rob.entries[r_dep].ready) {
+                        vk = rob.entries[r_dep].value;
+                    }
+                    else if (cdb.is_active() && cdb.get_rob() == r_dep) {
+                        vk = cdb.get_value();
+                    }
+                    else {
+                        qk = r_dep;
+                    }
+                }
+                int allocate_rob = rob.push(inst, inst.rd);
+                if (inst.rd != 0) {
+                    reg.set_rob(inst.rd, allocate_rob);
+                }
+                bool is_mem = (inst.type == InstructionType::LB || inst.type == InstructionType::LBU || inst.type == InstructionType::LH || inst.type == InstructionType::LHU || inst.type == InstructionType::LW || inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
+                if (is_mem) {
+                    bool is_st = (inst.type == InstructionType::SB || inst.type == InstructionType::SH || inst.type == InstructionType::SW);
+                    lsq.push(inst.type, is_st, vj, vk, qj, qk, inst.imm, allocate_rob);
+                }
+                else {
+                    int rs_idx = rs.allocate();
+                    if (inst.type == InstructionType::ADDI || inst.type == InstructionType::ANDI ||inst.type == InstructionType::ORI || inst.type == InstructionType::XORI || inst.type == InstructionType::SLLI || inst.type == InstructionType::SRLI ||inst.type == InstructionType::SRAI || inst.type == InstructionType::SLTI ||inst.type == InstructionType::SLTIU) {
+                        vk = inst.imm;
+                        qk = -1;
+                    }
+                    rs.issue(rs_idx, inst.type, vj, vk, qj, qk, allocate_rob, pc, inst.imm);
+                }
+
+                bool is_branch = (inst.type == InstructionType::BEQ || inst.type == InstructionType::BNE ||inst.type == InstructionType::BLT || inst.type == InstructionType::BLTU ||inst.type == InstructionType::BGE || inst.type == InstructionType::BGEU);
+                if (is_branch) {
+                    bool taken = predictor.predict(pc);
+                    next_pc = taken ? (pc + inst.imm) : (pc + 4);
+                    rob.next_entries[allocate_rob].jump = taken;
+                }
+                else if (inst.type == InstructionType::JAL) {
+                    next_pc = pc + inst.imm;
+                }
+                else if (inst.type == InstructionType::JALR) {
+                    jalr = true;
+                }
+                else {
+                    next_pc = pc + 4;
+                }
             }
         }
 

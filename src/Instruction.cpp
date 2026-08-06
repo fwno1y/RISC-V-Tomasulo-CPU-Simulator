@@ -173,5 +173,10 @@ Instruction decode(uint32_t pc, uint32_t raw_bits) {
             instruction.type = InstructionType::HALT;
             break;
     }
+    if (instruction.type == InstructionType::SB || instruction.type == InstructionType::SH || instruction.type == InstructionType::SW ||
+        instruction.type == InstructionType::BEQ || instruction.type == InstructionType::BGE || instruction.type == InstructionType::BGEU ||
+        instruction.type == InstructionType::BLT || instruction.type == InstructionType::BLTU || instruction.type == InstructionType::BNE) {
+        instruction.rd = 0;
+    }
     return instruction;
 }

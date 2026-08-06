@@ -23,9 +23,10 @@ public:
     //取指
     uint32_t read_instruction(uint32_t pc) const;
     void load_byte(uint32_t addr, uint8_t byte);
-    bool issue_read(uint32_t addr, int size, int rob, int late = 3);
-    bool issue_write(uint32_t addr, uint32_t data, int size, int late = 3);
-    bool check_read_done(int& rob, uint32_t& data);
+    bool issue_read(uint32_t addr, int size, int rob, int late = 0);
+    bool issue_write(uint32_t addr, uint32_t data, int size, int late = 0);
+    bool check_read_done(int& rob, uint32_t& data) const;
+    void finish_read();
     bool check_write_done();
     bool is_busy() const;
 };

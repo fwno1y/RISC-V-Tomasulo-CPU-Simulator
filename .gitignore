@@ -1,3 +1,9 @@
 main/
 data/
 build/
+/issue.pdf
+/PPCA 2026 · RISC-V Tomasulo CPU Simulator.md
+/Makefile
+/cmake_install.cmake
+/CMakeCache.txt
+CMakeFiles/

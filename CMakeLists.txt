@@ -12,7 +12,8 @@ include_directories(include)
 file(GLOB SOURCES "src/*.cpp")
 
 # 生成可执行文件 main
-add_executable(main ${SOURCES})
+add_executable(code ${SOURCES})
+target_compile_options(code PRIVATE -O2)
 
 # 可选：启用调试信息（如需调试）
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
