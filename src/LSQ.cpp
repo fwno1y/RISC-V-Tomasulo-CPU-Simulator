@@ -72,9 +72,10 @@ int LSQ::find_load(int &rob_out) const {
         int idx = (head + i) % 16;
         if (entries[idx].busy && !entries[idx].is_store && entries[idx].ready) {
             bool flag = false;
-            for (int j = 0; j < i; ++j) {
+            for (int j = 0; j < i; ++j) { //检查比当前load指令更老的
                 int pre_idx = (head + j) % 16;
                 if (entries[pre_idx].busy && entries[pre_idx].is_store) {
+                    //更老的store地址是否算好，地址是否与load相同
                     if (!entries[pre_idx].ready || entries[pre_idx].addr == entries[idx].addr) {
                         flag = true;
                         break;

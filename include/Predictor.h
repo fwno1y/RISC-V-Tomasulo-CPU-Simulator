@@ -29,13 +29,4 @@ public:
     void advance() override;                        // next_bht -> bht
 };
 
-class GlobalPredictor : public Predictor {
-public:
-    int log[1024] = {};
-    uint32_t history = 0;
-
-    GlobalPredictor();
-    bool predict(uint32_t pc) const override;
-    void update(uint32_t pc, bool jump) override;
-};
 #endif //RISC_V_CPU_PREDICTOR_H

@@ -18,7 +18,7 @@ class Register {
     RegState next;
 
     // 顺序无关化：issue 的 set_rob 与 commit 的清 tag 都可能写同一 rd 的 rob 域。
-    // 用两个掩码分别记录「本周期 issue 写过」「本周期 commit 要求清」，update 时合并，
+    // 用两个掩码分别记录本周期 issue 写过、本周期 commit 要求清，update 时合并，
     // 规则：issue 写过 > commit 清 > 沿用旧值。这样二者执行顺序可任意交换。
     bool issue_wrote[32] = {};
     bool commit_clear[32] = {};

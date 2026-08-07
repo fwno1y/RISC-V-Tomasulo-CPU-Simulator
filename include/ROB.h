@@ -31,12 +31,14 @@ public:
     bool is_full() const;
     bool is_empty() const;
     int get_count() const;
+    //挂到next_tail上并返回分配的rob编号
     int push(Instruction instruction, uint32_t dest);
     const ROBEntry& get_head() const;
     ROBEntry& get_next_head();
     void commit_head();
     void listen_cdb(int rob_id, uint32_t value, uint32_t target_pc);
     const ROBEntry& get_entry(int rob_id) const;
+    //撤销预测失败后指令
     void flush(int rob_id);
 };
 

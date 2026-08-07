@@ -12,9 +12,8 @@
 #include "ROB.h"
 #include "RS.h"
 
-// 各 module（stage）均遵循「读 cur 旧状态 / 写 next 新状态」的时序纪律，
-// 因此 run() 中各 stage 的调用顺序可以任意交换（满足 CR 随机打乱要求）。
-// 唯一的跨周期依赖：分支预测失败采用「本周期置位 / 下周期清空」的两段式
+// 各 module均遵循读 cur 旧状态 / 写 next 新状态的时序纪律，
+// 唯一的跨周期依赖：分支预测失败采用本周期置位 / 下周期清空的两段式
 // 处理，配合 cur/next 的 jalr / mispredicted / pc 状态，保证顺序无关。
 class CPU {
     Memory mem;
@@ -48,7 +47,7 @@ class CPU {
     void read_operand(uint32_t reg_id, uint32_t& v, int& q);
 
 public:
-    // 读入机器码（@addr + 十六进制字节）到内存
+    // 读入机器码到内存
     void load_program();
 
     // 检查是否应终止：halted 且 ROB/LSQ 排空且内存空闲，则输出结果返回 true
@@ -58,23 +57,22 @@ public:
     void store_resolve();
 
     // 2. 提交 ROB 头部（含分支预测失败检测、JALR、store 写发出、普通提交）
-    //    返回 true 表示遇到 HALT 并已输出结果（当前实现中 HALT 不入 ROB，
-    //    该返回值保留以兼容旧逻辑）
+    //    返回 true 表示遇到 HALT 并已输出结果
     bool commit();
 
-    // 3. CDB 广播扇出（读 CDB cur，写 ROB/RS/LSQ next）
+    // 3. CDB 广播（读 CDB cur，写 ROB/RS/LSQ next）
     void cdb_listen();
 
-    // 4. RS 计算 + 发 CDB（基于 cur 的固定优先级仲裁：store/load 完成 > RS 就绪）
+    // 4. RS 计算 + 发 CDB（store/load 完成 > RS 就绪）
     void execute();
 
-    // 5. 访存完成 + load 发出（基于 cur 仲裁；写 CDB/Memory/LSQ next）
+    // 5. 访存完成 + load 发出（基于 cur ；写 CDB/Memory/LSQ next）
     void memory_access();
 
     // 6. 取指 / 译码 / 分配 / 预测（读 cur：mem 指令、reg、rob、cdb、predictor）
     void issue();
 
-    // 7. 周期末更新：各部件 next->cur，前端状态 next->cur，pc=next_pc
+    // 7. 周期末更新：各部件 next->cur，前端状态 next->cur，pc = next_pc
     void update_all();
 
     // 主循环：顺序可任意交换的各 stage 调用

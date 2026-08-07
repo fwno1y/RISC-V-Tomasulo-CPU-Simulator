@@ -21,8 +21,10 @@ public:
     void update();
     void clear();
     bool is_full() const;
+    //找目前最靠前可用保留站
     int allocate() const;
     void issue(int rs_id, InstructionType op, uint32_t vj, uint32_t vk, int qj, int qk, int dest, uint32_t pc, int32_t imm);
+    //监听cdb
     void listen_cdb(int rob_id, uint32_t value);
     int find_ready() const;
     void release(int rs_id);
